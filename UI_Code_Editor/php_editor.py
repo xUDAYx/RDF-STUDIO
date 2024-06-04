@@ -1,6 +1,7 @@
-from PyQt6.QtWidgets import QWidget, QVBoxLayout, QTextEdit, QHBoxLayout, QPushButton, QLineEdit
-from PyQt6.QtCore import Qt
+from PyQt6.QtWidgets import QWidget, QVBoxLayout, QTextEdit, QHBoxLayout, QLineEdit, QPushButton, QMessageBox, QApplication
+from PyQt6.QtCore import Qt, QUrl
 from PyQt6.QtWebEngineWidgets import QWebEngineView
+import sys
 
 class PhpEditor(QWidget):
     def __init__(self, parent=None):
@@ -33,11 +34,39 @@ class PhpEditor(QWidget):
         mobile_view_widget.setLayout(mobile_view_layout)
         mobile_view_widget.setFixedWidth(300)  # Adjusted width
         mobile_view_widget.setFixedHeight(600)  # Adjusted height
-        mobile_view_widget.setStyleSheet("background-color: #000000; border-radius: 30px; padding: 20px;")
+        mobile_view_widget.setStyleSheet("background-color: #000000; border-radius: 10px; border:3px solid black; padding: 20px;")
+
+        # URL input for mobile view
+        url_layout = QHBoxLayout()
+        
+        self.url_input = QLineEdit()
+        self.url_input.setPlaceholderText("Enter URL")
+        self.url_input.setFixedHeight(40)
+        self.url_input.setStyleSheet("background-color:white;border-radius: 10px;border:2px solid black; padding: 5px;")
+        url_layout.addWidget(self.url_input)
+
+        load_button = QPushButton("Load")
+        load_button.setFixedHeight(40)
+        load_button.setStyleSheet("""
+            QPushButton {
+                background-color: #4CAF50; 
+                color: white; 
+                border: none; 
+                border-radius: 10px;
+                padding: 5px;
+            }
+            QPushButton:pressed {
+                background-color: #45a049;
+            }
+        """)
+        load_button.clicked.connect(self.load_url)
+        url_layout.addWidget(load_button)
+
+        mobile_view_layout.addLayout(url_layout)
 
         self.web_view = QWebEngineView()
         self.web_view.setStyleSheet("background-color: #FFFFFF; border-radius: 20px;")
-        self.web_view.setFixedSize(260, 580)  # Adjusted size
+        self.web_view.setFixedSize(260, 500)  # Adjusted size to fit with URL input
 
         mobile_view_layout.addWidget(self.web_view, 0, Qt.AlignmentFlag.AlignCenter)
 
@@ -48,18 +77,6 @@ class PhpEditor(QWidget):
 
         self.setLayout(main_content_layout)
 
-        # Add run button
-        # run_button = QPushButton("Run PHP")
-        # run_button.setFixedHeight(40)
-        # run_button.setStyleSheet("""
-        #     background-color: #4CAF50; 
-        #     color: white; 
-        #     border: none; 
-        #     border-radius: 10px;
-        # """)
-        # run_button.clicked.connect(self.run_php)
-        # content_layout.addWidget(run_button)
-
     def run_php(self):
         php_code = self.php_editor.toPlainText()
         # Here, you would execute the PHP code (e.g., send it to a server for execution)
@@ -68,3 +85,14 @@ class PhpEditor(QWidget):
 
     def set_code(self, code):
         self.php_editor.setPlainText(code)
+
+    def load_url(self):
+        url = self.url_input.text()
+        if not url.startswith("http://") and not url.startswith("https://"):
+            url = "http://" + url
+        try:
+            self.web_view.setUrl(QUrl(url))
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"Failed to load URL: {e}")
+
+
