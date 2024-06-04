@@ -1,11 +1,11 @@
 import sys
-from PyQt6.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLineEdit
+from PyQt6.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLineEdit,QMessageBox
 from Project_View.project_view import ProjectView  # Import the ProjectView class
 from UI_Code_Editor.php_editor import PhpEditor  # Import the PhpEditor class
 from JS_Lib_Editor.js_editor import JsEditor  # Import the JsEditor class
-from Biz_Func_Editor.php_editor import PhpEditorBF #Import the PhpEditorBF
-from JSON_Editor.json_editor import JsonEditor
-from BVO_Editor.bvo_editor import BVOEditor
+from Biz_Func_Editor.php_editor import PhpEditorBF  # Import the PhpEditorBF class
+from JSON_Editor.json_editor import JsonEditor  # Import the JsonEditor class
+from BVO_Editor.bvo_editor import BVOEditor  # Import the BVOEditor class
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -17,7 +17,43 @@ class MainWindow(QMainWindow):
 
         # Main widget
         main_widget = QWidget()
-        main_layout = QHBoxLayout(main_widget)  # Use QHBoxLayout for sidebar and main content
+        main_layout = QVBoxLayout(main_widget)  # Use QVBoxLayout to stack navbar and content
+
+        # Navbar widget with grey background
+        navbar_widget = QWidget()
+        navbar_widget.setFixedHeight(60)
+        navbar_widget.setStyleSheet("background-color: grey;")
+        top_layout = QHBoxLayout(navbar_widget)
+
+        # Add buttons to the navbar
+        self.button_1 = QPushButton("▶️")
+        self.button_1.setFixedSize(40, 40)
+        self.button_1.setStyleSheet("background-color: #FFB3BA; border: none; border-radius: 3px; padding: 5px; ")
+        self.button_1.clicked.connect(self.run_code)
+        top_layout.addWidget(self.button_1)
+
+        button_colors = [
+            "#FFDFBA", "#FFFFBA", "#BAFFC9", "#BAE1FF", "#B4A7D6",
+            "#D5A6BD", "#A9D18E", "#D5E8D4", "#E1D5E7", "#FFF2CC"
+        ]
+
+        for color in button_colors:
+            button = QPushButton()
+            button.setFixedSize(40, 40)
+            button.setStyleSheet(f"background-color: {color}; border: none; border-radius: 10px;")
+            top_layout.addWidget(button)
+
+        search_bar_nav = QLineEdit()
+        search_bar_nav.setPlaceholderText("Search")
+        search_bar_nav.setFixedHeight(40)
+        search_bar_nav.setStyleSheet("background-color: white; border-radius: 10px; padding: 5px;")
+        top_layout.addWidget(search_bar_nav)
+
+        main_layout.addWidget(navbar_widget)
+
+        # Main content area with sidebar and content
+        content_widget = QWidget()
+        content_layout = QHBoxLayout(content_widget)
 
         # Left layout for sidebar
         sidebar_layout = QVBoxLayout()
@@ -32,8 +68,8 @@ class MainWindow(QMainWindow):
             "UI Code Editor",
             "JS Editor",
             "Business Func Editor",
-            "BVO Editor",
-            "JSON Editor"
+            "JSON Editor",
+            "BVO Editor"
         ]
 
         for item in sidebar_items:
@@ -52,85 +88,12 @@ class MainWindow(QMainWindow):
             self.sidebar_buttons[item] = button
 
         sidebar_layout.addStretch(1)
-        main_layout.addWidget(sidebar_widget)
+        content_layout.addWidget(sidebar_widget)
 
         # Right layout for main content
         self.right_layout = QVBoxLayout()
-        
-        # Top layout for colored buttons and search bar
-        top_layout = QHBoxLayout()
-
-        # Add 11 colored buttons to the left side of the navbar
-        self.button_1 = QPushButton()
-        self.button_1.setFixedSize(40, 40)
-        self.button_1.setText("▶️")
-        self.button_1.setStyleSheet("background-color: #FFB3BA; border: none; border-radius: 10px;border: 1px solid black;border-radius: 3px; padding: 5px; ")
-        #button_1.clicked.connect(self.run_html)
-        top_layout.addWidget(self.button_1)
-
-        button_2 = QPushButton()
-        button_2.setFixedSize(40, 40)
-        button_2.setStyleSheet("background-color: #FFDFBA; border: none; border-radius: 10px;")
-        top_layout.addWidget(button_2)
-
-        button_3 = QPushButton()
-        button_3.setFixedSize(40, 40)
-        button_3.setStyleSheet("background-color: #FFFFBA; border: none; border-radius: 10px;")
-        top_layout.addWidget(button_3)
-
-        button_4 = QPushButton()
-        button_4.setFixedSize(40, 40)
-        button_4.setStyleSheet("background-color: #BAFFC9; border: none; border-radius: 10px;")
-        top_layout.addWidget(button_4)
-
-        button_5 = QPushButton()
-        button_5.setFixedSize(40, 40)
-        button_5.setStyleSheet("background-color: #BAE1FF; border: none; border-radius: 10px;")
-        top_layout.addWidget(button_5)
-
-        button_6 = QPushButton()
-        button_6.setFixedSize(40, 40)
-        button_6.setStyleSheet("background-color: #B4A7D6; border: none; border-radius: 10px;")
-        top_layout.addWidget(button_6)
-
-        button_7 = QPushButton()
-        button_7.setFixedSize(40, 40)
-        button_7.setStyleSheet("background-color: #D5A6BD; border: none; border-radius: 10px;")
-        top_layout.addWidget(button_7)
-
-        button_8 = QPushButton()
-        button_8.setFixedSize(40, 40)
-        button_8.setStyleSheet("background-color: #A9D18E; border: none; border-radius: 10px;")
-        top_layout.addWidget(button_8)
-
-        button_9 = QPushButton()
-        button_9.setFixedSize(40, 40)
-        button_9.setStyleSheet("background-color: #D5E8D4; border: none; border-radius: 10px;")
-        top_layout.addWidget(button_9)
-
-        button_10 = QPushButton()
-        button_10.setFixedSize(40, 40)
-        button_10.setStyleSheet("background-color: #E1D5E7; border: none; border-radius: 10px;")
-        top_layout.addWidget(button_10)
-
-        button_11 = QPushButton()
-        button_11.setFixedSize(40, 40)
-        button_11.setStyleSheet("background-color: #FFF2CC; border: none; border-radius: 10px;")
-        top_layout.addWidget(button_11)
-
-        search_bar_nav = QLineEdit()
-        search_bar_nav.setPlaceholderText("Search")
-        search_bar_nav.setFixedHeight(40)
-        search_bar_nav.setStyleSheet("background-color: white; border-radius: 10px; padding: 5px;")
-        top_layout.addWidget(search_bar_nav)
-
-        self.right_layout.addLayout(top_layout)
-
-        # Add a placeholder for project view
-        self.project_view_placeholder = QWidget()
-        self.right_layout.addWidget(self.project_view_placeholder)
-
-        main_layout.addLayout(self.right_layout)
+        content_layout.addLayout(self.right_layout)
+        main_layout.addWidget(content_widget)
 
         self.setCentralWidget(main_widget)
 
@@ -142,7 +105,7 @@ class MainWindow(QMainWindow):
         self.bvo_editor_instance = None
         self.current_button = None
 
-        self.button_1.clicked.connect(self.run_code)
+        self.sidebar_button_clicked("Project View")
 
     def sidebar_button_clicked(self, button_name):
         if self.current_button:
@@ -166,6 +129,7 @@ class MainWindow(QMainWindow):
             self.load_json_editor()
         elif button_name == "BVO Editor":
             self.load_bvo_editor()
+        
 
         self.current_button = self.sidebar_buttons[button_name]
         self.current_button.setStyleSheet("""
@@ -176,56 +140,61 @@ class MainWindow(QMainWindow):
             background-color: pink;
         """)
 
-    def update_sidebar_color(self, button_name):
-        # Reset all sidebar button colors to default
-        for button in self.sidebar_buttons.values():
-            button.setStyleSheet("""
+    def update_selected_button(self, button_name):
+        if self.current_button:
+            self.current_button.setStyleSheet("""
                 font-size: 16px;
                 border-radius: 10px;
                 padding: 5px;
                 text-align: center;
                 background-color: #E0E0E0;
             """)
-        # Set the color of the specified sidebar button to pink
-        if button_name in self.sidebar_buttons:
-            self.sidebar_buttons[button_name].setStyleSheet("""
-                font-size: 16px;
-                border-radius: 10px;
-                padding: 5px;
-                text-align: center;
-                background-color: pink;
-            """)
+        
+        self.current_button = self.sidebar_buttons[button_name]
+        self.current_button.setStyleSheet("""
+            font-size: 16px;
+            border-radius: 10px;
+            padding: 5px;
+            text-align: center;
+            background-color: pink;
+        """)
 
     def load_project_view(self):
         if not self.project_view_instance:
             self.project_view_instance = ProjectView()
             self.project_view_instance.file_double_clicked.connect(self.open_file_in_editor)
         self.display_content(self.project_view_instance)
+        self.update_selected_button("Project View")
 
     def load_ui_code_editor(self):
         if not self.html_editor_instance:
             self.html_editor_instance = PhpEditor()
         self.display_content(self.html_editor_instance)
+        self.update_selected_button("UI Code Editor")
 
     def load_js_lib_editor(self):
         if not self.js_editor_instance:
             self.js_editor_instance = JsEditor()
         self.display_content(self.js_editor_instance)
+        self.update_selected_button("JS Editor")
 
     def load_biz_func_editor(self):
         if not self.biz_func_editor_instance:
             self.biz_func_editor_instance = PhpEditorBF()
         self.display_content(self.biz_func_editor_instance)
+        self.update_selected_button("Business Func Editor")
     
     def load_json_editor(self):
         if not self.json_editor_instance:
             self.json_editor_instance = JsonEditor()
         self.display_content(self.json_editor_instance)
+        self.update_selected_button("JSON Editor")
     
     def load_bvo_editor(self):
         if not self.bvo_editor_instance:
             self.bvo_editor_instance = BVOEditor()
         self.display_content(self.bvo_editor_instance)
+        self.update_selected_button("BVO Editor")
 
     def display_content(self, widget):
         # Clear the existing layout
@@ -245,7 +214,7 @@ class MainWindow(QMainWindow):
             with open(file_path, 'r') as file:
                 code = file.read()
             self.html_editor_instance.set_code(code)
-            self.update_sidebar_color("UI Code Editor")
+            self.update_selected_button("UI Code Editor")
             
         if "RDF_JS_OBJ" in file_path:
             if not self.js_editor_instance:
@@ -254,7 +223,7 @@ class MainWindow(QMainWindow):
             with open(file_path, 'r') as file:
                 code = file.read()
             self.js_editor_instance.set_code(code)
-            self.update_sidebar_color("JS Editor")
+            self.update_selected_button("JS Editor")
             
         if "RDF_BF" in file_path:
             if not self.biz_func_editor_instance:
@@ -263,16 +232,17 @@ class MainWindow(QMainWindow):
             with open(file_path, 'r') as file:
                 code = file.read()
             self.biz_func_editor_instance.set_code(code)
-            self.update_sidebar_color("Business Func Editor")
+            self.update_selected_button("Business Func Editor")
         
         if "RDF_JSON" in file_path:
-            if not self.json_editor_instance:
-                self.json_editor_instance = JsonEditor()
-            self.load_json_editor()
-            with open(file_path, 'r') as file:
-                code = file.read()
-            self.json_editor_instance.set_code(code)
-            self.update_sidebar_color("JSON Editor")
+                if not self.json_editor_instance:
+                    self.json_editor_instance = JsonEditor()
+                self.load_json_editor()
+                with open(file_path, 'r') as file:
+                    json_code = file.read()
+                self.json_editor_instance.set_code(json_code)
+                self.update_selected_button("JSON Editor")
+                
         
         if "RDF_BVO" in file_path:
             if not self.bvo_editor_instance:
@@ -281,12 +251,9 @@ class MainWindow(QMainWindow):
             with open(file_path, 'r') as file:
                 code = file.read()
             self.bvo_editor_instance.set_code(code)
-            self.update_sidebar_color("BVO Editor")
+            self.update_selected_button("BVO Editor")
         else:
             pass
-
-
-
 
     def run_code(self):
         if self.current_button == self.sidebar_buttons["UI Code Editor"]:

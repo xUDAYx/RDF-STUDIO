@@ -1,7 +1,6 @@
-from PyQt6.QtWidgets import QWidget, QVBoxLayout, QTextEdit, QHBoxLayout, QPushButton, QLineEdit, QMessageBox
-from PyQt6.QtCore import Qt
-from PyQt6.QtWebEngineWidgets import QWebEngineView
 import json
+from PyQt6.QtWidgets import QWidget, QVBoxLayout, QTextEdit, QHBoxLayout,  QLineEdit, QTreeView,  QMessageBox  # Added necessary imports
+from PyQt6.QtGui import  QStandardItemModel, QStandardItem
 
 class JsonEditor(QWidget):
     def __init__(self, parent=None):
@@ -34,13 +33,11 @@ class JsonEditor(QWidget):
         mobile_view_widget.setLayout(mobile_view_layout)
         mobile_view_widget.setFixedWidth(300)  # Adjusted width
         mobile_view_widget.setFixedHeight(600)  # Adjusted height
-        mobile_view_widget.setStyleSheet("background-color: #000000; border-radius: 30px; padding: 20px;")
+        mobile_view_widget.setStyleSheet("background-color: white; border-radius: 30px; padding: 20px;")
 
-        self.web_view = QWebEngineView()
-        self.web_view.setStyleSheet("background-color: #FFFFFF; border-radius: 20px;")
-        self.web_view.setFixedSize(260, 580)  # Adjusted size
-
-        mobile_view_layout.addWidget(self.web_view, 0, Qt.AlignmentFlag.AlignCenter)
+        self.tree_view = QTreeView()
+        self.tree_view.setStyleSheet("color: black; background-color: white; border: none;")
+        mobile_view_layout.addWidget(self.tree_view)
 
         # Combine content area and mobile view
         main_content_layout = QHBoxLayout()
@@ -49,27 +46,36 @@ class JsonEditor(QWidget):
 
         self.setLayout(main_content_layout)
 
-        # Add run button
-        # run_button = QPushButton("Run JSON")
-        # run_button.setFixedHeight(40)
-        # run_button.setStyleSheet("""
-        #     background-color: #4CAF50; 
-        #     color: white; 
-        #     border: none; 
-        #     border-radius: 10px;
-        # """)
-        # run_button.clicked.connect(self.run_json)
-        # content_layout.addWidget(run_button)
+        # Connect text changed signal to update tree view
+        self.json_editor.textChanged.connect(self.update_tree_view)
 
-    def run_json(self):
+    def update_tree_view(self):
         json_code = self.json_editor.toPlainText()
-        try:
-            parsed_json = json.loads(json_code)
-            formatted_json = json.dumps(parsed_json, indent=4)
-            self.web_view.setHtml(f"<pre>{formatted_json}</pre>")
-            QMessageBox.information(self, "Success", "Valid JSON")
-        except json.JSONDecodeError as e:
-            QMessageBox.critical(self, "Error", f"Invalid JSON:\n{str(e)}")
+        if json_code:
+                parsed_json = json.loads(json_code)
+                self.populate_tree_view(parsed_json)
 
-    def set_code(self, code):
-        self.json_editor.setPlainText(code)
+    def populate_tree_view(self, data):
+        model = QStandardItemModel()
+        self.tree_view.setModel(model)
+        self.add_json_to_model(data, model.invisibleRootItem())
+
+    def add_json_to_model(self, data, parent):
+        if isinstance(data, dict):
+            for key, value in data.items():
+                key_item = QStandardItem(str(key))
+                value_item = QStandardItem(str(value))
+                parent.appendRow([key_item, value_item])
+                if isinstance(value, (dict, list)):
+                    self.add_json_to_model(value, key_item)
+        elif isinstance(data, list):
+            for index, value in enumerate(data):
+                key_item = QStandardItem(str(index))
+                value_item = QStandardItem(str(value))
+                parent.appendRow([key_item, value_item])
+                if isinstance(value, (dict, list)):
+                    self.add_json_to_model(value, key_item)
+    
+    def set_code(self, json_code):
+        self.json_editor.setPlainText(json_code)
+
