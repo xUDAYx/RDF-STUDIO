@@ -12,7 +12,7 @@ class MainWindow(QMainWindow):
         super().__init__()
 
         self.setWindowTitle("RDF Studio | Python | Generative AI")
-        self.setGeometry(100, 100, 1200, 800)
+        self.setGeometry(150, 30, 1200, 800)
         self.setStyleSheet("background-color: pink;")
 
         # Main widget
@@ -22,13 +22,13 @@ class MainWindow(QMainWindow):
         # Navbar widget with grey background
         navbar_widget = QWidget()
         navbar_widget.setFixedHeight(60)
-        navbar_widget.setStyleSheet("background-color: grey;")
+        navbar_widget.setStyleSheet("background-color: grey;border-radius: 5px;")
         top_layout = QHBoxLayout(navbar_widget)
 
         # Add buttons to the navbar
         self.button_1 = QPushButton("▶️")
         self.button_1.setFixedSize(40, 40)
-        self.button_1.setStyleSheet("background-color: #FFB3BA; border: none; border-radius: 3px; padding: 5px; ")
+        self.button_1.setStyleSheet("background-color: #FFB3BA; border: none; border-radius: 10px; padding: 5px; ")
         self.button_1.clicked.connect(self.run_code)
         top_layout.addWidget(self.button_1)
 
