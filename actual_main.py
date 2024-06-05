@@ -1,19 +1,25 @@
 import sys
-from PyQt6.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLineEdit,QMessageBox
-from Project_View.project_view import ProjectView  # Import the ProjectView class
-from UI_Code_Editor.php_editor import PhpEditor  # Import the PhpEditor class
-from JS_Lib_Editor.js_editor import JsEditor  # Import the JsEditor class
-from Biz_Func_Editor.php_editor import PhpEditorBF  # Import the PhpEditorBF class
-from JSON_Editor.json_editor import JsonEditor  # Import the JsonEditor class
-from BVO_Editor.bvo_editor import BVOEditor  # Import the BVOEditor class
+from PyQt6.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLineEdit, QMessageBox
+from PyQt6.QtCore import QProcess, Qt
+from Project_View.project_view import ProjectView
+from UI_Code_Editor.php_editor import PhpEditor
+from JS_Lib_Editor.js_editor import JsEditor
+from Biz_Func_Editor.php_editor import PhpEditorBF
+from JSON_Editor.json_editor import JsonEditor
+from BVO_Editor.bvo_editor import BVOEditor
+from Theme.colors import Colors
 
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
 
+        self.colors = Colors()
+
         self.setWindowTitle("RDF Studio | Python | Generative AI")
         self.setGeometry(150, 30, 1200, 800)
-        self.setStyleSheet("background-color: pink;")
+        self.setStyleSheet(f"background-color: {self.colors.background_color};")
+        self.setWindowFlags(Qt.WindowType.Window)
+        
 
         # Main widget
         main_widget = QWidget()
@@ -22,22 +28,15 @@ class MainWindow(QMainWindow):
         # Navbar widget with grey background
         navbar_widget = QWidget()
         navbar_widget.setFixedHeight(60)
-        navbar_widget.setStyleSheet("background-color: grey;border-radius: 5px;")
+        navbar_widget.setStyleSheet(f"background-color: {self.colors.navbar_color};border-radius: 10px;")
         top_layout = QHBoxLayout(navbar_widget)
-
         # Add buttons to the navbar
-        self.button_1 = QPushButton("▶️")
+        self.button_1 = QPushButton()
         self.button_1.setFixedSize(40, 40)
-        self.button_1.setStyleSheet("background-color: #FFB3BA; border: none; border-radius: 10px; padding: 5px; ")
-        self.button_1.clicked.connect(self.run_code)
+        self.button_1.setStyleSheet("background-color: #b4a7d6; border: none; border-radius: 10px; padding: 5px; ")
         top_layout.addWidget(self.button_1)
 
-        button_colors = [
-            "#FFDFBA", "#FFFFBA", "#BAFFC9", "#BAE1FF", "#B4A7D6",
-            "#D5A6BD", "#A9D18E", "#D5E8D4", "#E1D5E7", "#FFF2CC"
-        ]
-
-        for color in button_colors:
+        for color in self.colors.button_colors:
             button = QPushButton()
             button.setFixedSize(40, 40)
             button.setStyleSheet(f"background-color: {color}; border: none; border-radius: 10px;")
@@ -46,7 +45,7 @@ class MainWindow(QMainWindow):
         search_bar_nav = QLineEdit()
         search_bar_nav.setPlaceholderText("Search")
         search_bar_nav.setFixedHeight(40)
-        search_bar_nav.setStyleSheet("background-color: white; border-radius: 10px; padding: 5px;")
+        search_bar_nav.setStyleSheet("background-color: #323234; color:  #fcfcfc; border-radius: 10px; padding: 5px 5px 5px 10px; margin-left: 400px;")
         top_layout.addWidget(search_bar_nav)
 
         main_layout.addWidget(navbar_widget)
@@ -60,7 +59,7 @@ class MainWindow(QMainWindow):
         sidebar_widget = QWidget()
         sidebar_widget.setLayout(sidebar_layout)
         sidebar_widget.setFixedWidth(200)
-        sidebar_widget.setStyleSheet("background-color: #F0F0F0; border-radius: 10px;")
+        sidebar_widget.setStyleSheet(f"background-color: {self.colors.sidebar_color}; border-radius: 10px;")
 
         self.sidebar_buttons = {}
         sidebar_items = [
@@ -75,19 +74,34 @@ class MainWindow(QMainWindow):
         for item in sidebar_items:
             button = QPushButton(item)
             button.setFixedHeight(40)
-            button.setStyleSheet("""
+            button.setStyleSheet(f"""
+                color: #fcfcfc;
                 font-size: 16px;
                 border-radius: 10px;
                 padding: 5px;
                 text-align: center;
-                background-color: #E0E0E0;
+                background-color: {self.colors.sidebar_button_color};
             """)
             button.clicked.connect(lambda checked, b=item: self.sidebar_button_clicked(b))
             sidebar_layout.addWidget(button)
             sidebar_layout.addSpacing(5)
             self.sidebar_buttons[item] = button
 
-        sidebar_layout.addStretch(1)
+        # Add "Restart" button at the bottom
+        restart_button = QPushButton("Restart")
+        restart_button.setFixedHeight(40)
+        restart_button.setStyleSheet(f"""
+            color: #fcfcfc;
+            font-size: 16px;
+            border-radius: 10px;
+            padding: 5px;
+            text-align: center;
+            background-color: {self.colors.sidebar_button_color};
+        """)
+        restart_button.clicked.connect(self.restart_application)
+        sidebar_layout.addStretch(1)  # Add stretch to push the button to the bottom
+        sidebar_layout.addWidget(restart_button)
+
         content_layout.addWidget(sidebar_widget)
 
         # Right layout for main content
@@ -109,12 +123,13 @@ class MainWindow(QMainWindow):
 
     def sidebar_button_clicked(self, button_name):
         if self.current_button:
-            self.current_button.setStyleSheet("""
+            self.current_button.setStyleSheet(f"""
                 font-size: 16px;
                 border-radius: 10px;
                 padding: 5px;
+                color: black;
                 text-align: center;
-                background-color: #E0E0E0;
+                background-color: {self.colors.sidebar_button_color};
             """)
         
         if button_name == "Project View":
@@ -132,31 +147,33 @@ class MainWindow(QMainWindow):
         
 
         self.current_button = self.sidebar_buttons[button_name]
-        self.current_button.setStyleSheet("""
+        self.current_button.setStyleSheet(f"""
             font-size: 16px;
             border-radius: 10px;
             padding: 5px;
+                                          color:  #fcfcfc;
             text-align: center;
-            background-color: pink;
+            background-color: {self.colors.sidebar_button_selected_color};
         """)
 
     def update_selected_button(self, button_name):
         if self.current_button:
-            self.current_button.setStyleSheet("""
+            self.current_button.setStyleSheet(f"""
+                color:  #fcfcfc;
                 font-size: 16px;
                 border-radius: 10px;
                 padding: 5px;
-                text-align: center;
-                background-color: #E0E0E0;
+                text-align: center;                           
+                background-color: {self.colors.sidebar_button_color};
             """)
         
         self.current_button = self.sidebar_buttons[button_name]
-        self.current_button.setStyleSheet("""
+        self.current_button.setStyleSheet(f"""
             font-size: 16px;
             border-radius: 10px;
             padding: 5px;
             text-align: center;
-            background-color: pink;
+            background-color: {self.colors.sidebar_button_selected_color};
         """)
 
     def load_project_view(self):
@@ -216,7 +233,7 @@ class MainWindow(QMainWindow):
             self.html_editor_instance.set_code(code)
             self.update_selected_button("UI Code Editor")
             
-        if "RDF_JS_OBJ" in file_path:
+        if "RDF_ACTION" in file_path:
             if not self.js_editor_instance:
                 self.js_editor_instance = JsEditor()
             self.load_js_lib_editor()
@@ -225,7 +242,7 @@ class MainWindow(QMainWindow):
             self.js_editor_instance.set_code(code)
             self.update_selected_button("JS Editor")
             
-        if "RDF_BF" in file_path:
+        if "RDF_BW" in file_path:
             if not self.biz_func_editor_instance:
                 self.biz_func_editor_instance = PhpEditorBF()
             self.load_biz_func_editor()
@@ -234,7 +251,7 @@ class MainWindow(QMainWindow):
             self.biz_func_editor_instance.set_code(code)
             self.update_selected_button("Business Func Editor")
         
-        if "RDF_JSON" in file_path:
+        if "RDF_DATA" in file_path:
                 if not self.json_editor_instance:
                     self.json_editor_instance = JsonEditor()
                 self.load_json_editor()
@@ -271,6 +288,12 @@ class MainWindow(QMainWindow):
         if self.current_button == self.sidebar_buttons["BVO Editor"]:
             if self.bvo_editor_instance:
                 self.bvo_editor_instance.run_bvo()
+
+    def restart_application(self):
+        # Restart the application
+        qapp = QApplication.instance()
+        qapp.quit()
+        QProcess.startDetached(sys.executable, sys.argv)
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
