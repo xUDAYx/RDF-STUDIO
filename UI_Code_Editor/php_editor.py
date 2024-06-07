@@ -1,10 +1,10 @@
-from PyQt6.QtWidgets import QWidget, QVBoxLayout, QTextEdit, QHBoxLayout, QLineEdit,QMessageBox,QPushButton
+from PyQt6.QtWidgets import QWidget, QVBoxLayout, QTextEdit, QHBoxLayout, QLineEdit, QPushButton, QScrollBar
 from PyQt6.QtCore import Qt, QRegularExpression
 from PyQt6.QtWebEngineWidgets import QWebEngineView
 from PyQt6.QtGui import QSyntaxHighlighter, QTextCharFormat, QColor, QFont
-import os,sys
+import os, sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'Rule_Engine')))
-from Rule_Engine.rule_engine import HtmlRuleEngine 
+from Rule_Engine.rule_engine import HtmlRuleEngine
 
 class PhpHighlighter(QSyntaxHighlighter):
     def __init__(self, parent=None):
@@ -76,6 +76,53 @@ class PhpEditor(QWidget):
         validate_button.clicked.connect(self.validate_html)
         content_layout.addWidget(validate_button)
 
+        # Add collapsible terminal
+        self.terminal = QTextEdit()
+        self.terminal.setPlaceholderText("Terminal")
+        self.terminal.setStyleSheet("background-color: #323234; color: #FFFFFF; padding: 10px;")
+        self.terminal.setVisible(False)  # Hide terminal initially
+        self.terminal.setVerticalScrollBar(QScrollBar())
+        self.terminal.verticalScrollBar().setStyleSheet("background-color: #2e2e2e;")
+
+        # Stylish buttons
+        self.terminal_toggle_button_up = QPushButton("▲")
+        self.terminal_toggle_button_up.setFixedWidth(30)
+        self.terminal_toggle_button_up.setStyleSheet("""
+            QPushButton {
+                color: #fcfcfc;
+                background-color: #323234;
+                border: none;
+                border-radius: 15px;
+            }
+            QPushButton:hover {
+                background-color: #3a3a3a;
+            }
+        """)
+        self.terminal_toggle_button_up.clicked.connect(self.hide_terminal)
+
+        self.terminal_toggle_button_down = QPushButton("▼")
+        self.terminal_toggle_button_down.setFixedWidth(30)
+        self.terminal_toggle_button_down.setStyleSheet("""
+            QPushButton {
+                color: #fcfcfc;
+                background-color: #323234;
+                border: none;
+                border-radius: 15px;
+            }
+            QPushButton:hover {
+                background-color: #3a3a3a;
+            }
+        """)
+        self.terminal_toggle_button_down.clicked.connect(self.show_terminal)
+        self.terminal_toggle_button_down.setVisible(False)  # Hide initially
+
+        terminal_toggle_layout = QHBoxLayout()
+        terminal_toggle_layout.addWidget(self.terminal_toggle_button_up, alignment=Qt.AlignmentFlag.AlignLeft)
+        terminal_toggle_layout.addWidget(self.terminal_toggle_button_down, alignment=Qt.AlignmentFlag.AlignLeft)
+
+        content_layout.addLayout(terminal_toggle_layout)
+        content_layout.addWidget(self.terminal)
+
         # Right layout for mobile view
         mobile_view_layout = QVBoxLayout()
         mobile_view_widget = QWidget()
@@ -102,6 +149,17 @@ class PhpEditor(QWidget):
         # Connect the textChanged signal to the update_mobile_view slot
         self.php_editor.textChanged.connect(self.update_mobile_view)
 
+    def hide_terminal(self):
+        self.terminal.hide()
+        self.terminal_toggle_button_up.setVisible(False)
+        self.terminal_toggle_button_down.setVisible(True)
+
+    def show_terminal(self):
+        self.terminal.show()
+        self.terminal.setFixedHeight(self.php_editor.height() // 3)  # Set the height of the terminal to one-fourth of the php_editor
+        self.terminal_toggle_button_up.setVisible(True)
+        self.terminal_toggle_button_down.setVisible(False)
+
     def update_mobile_view(self):
         html_code = self.php_editor.toPlainText()
         css_code = """
@@ -121,6 +179,7 @@ class PhpEditor(QWidget):
     def set_code(self, code):
         self.php_editor.setPlainText(code)
         self.update_mobile_view()
+
     def validate_html(self):
         try:
             html_code = self.php_editor.toPlainText()
@@ -134,8 +193,11 @@ class PhpEditor(QWidget):
             rule_engine = HtmlRuleEngine(rules_file_path)
             errors = rule_engine.apply_rules(html_code)
             if errors:
-                QMessageBox.warning(self, "Validation Errors", "\n".join(errors))
+                self.terminal.setPlainText("\n".join(errors))
+                self.show_terminal()
             else:
-                QMessageBox.information(self, "Validation", "No errors found!")
+                self.terminal.setPlainText("No errors found!")
+                self.hide_terminal()
         except Exception as e:
-            QMessageBox.critical(self, "Error", f"An error occurred during validation: {str(e)}")
+            self.terminal.setPlainText(f"An error occurred during validation: {str(e)}")
+            self.show_terminal()
