@@ -1,7 +1,6 @@
-from PyQt6.QtWidgets import QWidget, QVBoxLayout, QTextEdit, QHBoxLayout, QLineEdit
-from PyQt6.QtCore import Qt, QRegularExpression
-from PyQt6.QtWebEngineWidgets import QWebEngineView
-from PyQt6.QtGui import QSyntaxHighlighter, QTextCharFormat, QColor, QFont
+from PyQt6.QtWidgets import QWidget, QVBoxLayout, QTextEdit, QHBoxLayout, QLineEdit, QTreeView
+from PyQt6.QtCore import Qt, QRegularExpression 
+from PyQt6.QtGui import QSyntaxHighlighter, QTextCharFormat, QColor, QFont,QStandardItemModel, QStandardItem
 import json
 
 class JsonHighlighter(QSyntaxHighlighter):
@@ -34,17 +33,17 @@ class JsonEditor(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
 
-        self.setStyleSheet("background-color: #1b1e28; border-radius: 10px;")
+        self.setStyleSheet("background-color: #232228; border-radius: 10px;")
 
         # Create content layout for JSON Editor
         content_layout = QVBoxLayout()
         content_widget = QWidget()
         content_widget.setLayout(content_layout)
         content_widget.setStyleSheet("background-color: #232228; border-radius: 10px;")
-
+        
         # Add search bar
         search_bar = QLineEdit()
-        search_bar.setPlaceholderText("Hi, Tell me what JSON you want to make!")
+        search_bar.setPlaceholderText("Search your JSON data...")
         search_bar.setFixedHeight(40)
         search_bar.setStyleSheet("background-color:white;border-radius: 10px; padding: 5px;")
         content_layout.addWidget(search_bar)
@@ -53,18 +52,7 @@ class JsonEditor(QWidget):
         self.json_editor = QTextEdit()
         self.json_editor.setPlaceholderText("JSON Editor")
         self.json_editor.setStyleSheet("background-color: #323234; color: #FFFFFF; padding: 10px;")
-
-        # Set the font for the text editor
-        font = QFont("Consolas", 12)
-        self.json_editor.setFont(font)
-
         content_layout.addWidget(self.json_editor)
-
-        # Add syntax highlighter
-        self.highlighter = JsonHighlighter(self.json_editor.document())
-
-        # Connect text changed signal to update mobile view
-        self.json_editor.textChanged.connect(self.update_mobile_view)
 
         # Right layout for mobile view
         mobile_view_layout = QVBoxLayout()
@@ -75,9 +63,9 @@ class JsonEditor(QWidget):
         mobile_view_layout.setContentsMargins(0, 25, 0, 25)
         mobile_view_widget.setStyleSheet("background-color: #232228; border-radius: 10px; padding:20px;border-width: 10px; ")
 
-        self.mobile_view = QWebEngineView()
-        self.mobile_view.setStyleSheet("background-color: #FFFFFF; border-radius: 20px; padding:20px;")
-        mobile_view_layout.addWidget(self.mobile_view)  # Adjusted size
+        self.tree_view = QTreeView()
+        self.tree_view.setStyleSheet("color: black; background-color: white; border: none;")
+        mobile_view_layout.addWidget(self.tree_view)
 
         # Combine content area and mobile view
         main_content_layout = QHBoxLayout()
@@ -86,44 +74,35 @@ class JsonEditor(QWidget):
 
         self.setLayout(main_content_layout)
 
-        # Call the update_mobile_view method to render the initial JSON code
-        self.update_mobile_view()
+        # Connect text changed signal to update tree view
+        self.json_editor.textChanged.connect(self.update_tree_view)
 
-    def update_mobile_view(self):
+    def update_tree_view(self):
         json_code = self.json_editor.toPlainText()
         if json_code:
-            try:
                 parsed_json = json.loads(json_code)
-                html_code = self.generate_tree_html(parsed_json)
-                self.mobile_view.setHtml(html_code)
-            except json.JSONDecodeError:
-                self.mobile_view.setHtml("<p style='color: red;'>Invalid JSON</p>")
-        else:
-            self.mobile_view.setHtml("")
+                self.populate_tree_view(parsed_json)
 
-    def generate_tree_html(self, data, level=0):
-        html = ""
-        indent = "&nbsp;" * (level * 4)
+    def populate_tree_view(self, data):
+        model = QStandardItemModel()
+        self.tree_view.setModel(model)
+        self.add_json_to_model(data, model.invisibleRootItem())
+
+    def add_json_to_model(self, data, parent):
         if isinstance(data, dict):
-            html += f"{indent}<details>\n"
-            html += f"{indent}&nbsp;&nbsp;<summary>&#x1F4C2; Object</summary>\n"
-            html += f"{indent}&nbsp;&nbsp;<ul>\n"
             for key, value in data.items():
-                html += f"{indent}&nbsp;&nbsp;&nbsp;&nbsp;<li>{key}: {self.generate_tree_html(value, level + 2)}</li>\n"
-            html += f"{indent}&nbsp;&nbsp;</ul>\n"
-            html += f"{indent}</details>\n"
+                key_item = QStandardItem(str(key))
+                value_item = QStandardItem(str(value))
+                parent.appendRow([key_item, value_item])
+                if isinstance(value, (dict, list)):
+                    self.add_json_to_model(value, key_item)
         elif isinstance(data, list):
-            html += f"{indent}<details>\n"
-            html += f"{indent}&nbsp;&nbsp;<summary>&#x1F4C3; Array</summary>\n"
-            html += f"{indent}&nbsp;&nbsp;<ul>\n"
-            for item in data:
-                html += f"{indent}&nbsp;&nbsp;&nbsp;&nbsp;<li>{self.generate_tree_html(item, level + 2)}</li>\n"
-            html += f"{indent}&nbsp;&nbsp;</ul>\n"
-            html += f"{indent}</details>\n"
-        else:
-            html += str(data)
-        return html
-
-    def set_code(self, code):
-        self.json_editor.setPlainText(code)
-        self.update_mobile_view()
+            for index, value in enumerate(data):
+                key_item = QStandardItem(str(index))
+                value_item = QStandardItem(str(value))
+                parent.appendRow([key_item, value_item])
+                if isinstance(value, (dict, list)):
+                    self.add_json_to_model(value, key_item)
+    
+    def set_code(self, json_code):
+        self.json_editor.setPlainText(json_code)
