@@ -76,8 +76,9 @@ class MainWindow(QMainWindow):
             "UI Code Editor",
             "JS Editor",
             "Business Func Editor",
-            "JSON Editor",
-            "BVO Editor"
+            "BVO Editor",
+            "JSON Editor"
+            
         ]
 
         for item in sidebar_items:
