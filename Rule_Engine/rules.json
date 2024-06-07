@@ -1,0 +1,24 @@
+{
+  "rules": [
+      {
+          "description": "No HTML tag should be present",
+          "pattern": "<html.*?>"
+      },
+      {
+          "description": "No HEAD tag should be present",
+          "pattern": "<head.*?>"
+      },
+      {
+          "description": "No BODY tag should be present",
+          "pattern": "<body.*?>"
+      },
+      {
+          "description": "Div tag should be present only inside <td> tag",
+          "pattern": "<td.*?>.*?<div.*?>.*?</td>"
+      },
+      {
+          "description": "No div tag should be present outside <td> tag",
+          "pattern": "<div.*?>.*?(?!</td>)"
+      }
+  ]
+}
