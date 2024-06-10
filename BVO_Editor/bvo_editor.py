@@ -1,7 +1,12 @@
-from PyQt6.QtWidgets import QWidget, QVBoxLayout, QTextEdit, QHBoxLayout, QLineEdit
-from PyQt6.QtCore import Qt, QRegularExpression
+from PyQt6.QtWidgets import QWidget, QVBoxLayout, QTextEdit, QHBoxLayout, QLineEdit, QPushButton, QScrollBar, QMessageBox, QApplication
+from PyQt6.QtCore import Qt, QUrl, QRegularExpression
 from PyQt6.QtWebEngineWidgets import QWebEngineView
 from PyQt6.QtGui import QSyntaxHighlighter, QTextCharFormat, QColor, QFont
+import os
+import sys
+import json
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'Rule_Engine')))
+from Rule_Engine.BVO_Rule_Engine.BVO_rule_engine import RuleEngine, BusinessValueObject
 
 class BVOHighlighter(QSyntaxHighlighter):
     def __init__(self, parent=None):
@@ -68,6 +73,58 @@ class BVOEditor(QWidget):
         # Add syntax highlighter
         self.highlighter = BVOHighlighter(self.bvo_editor.document())
 
+        validate_button = QPushButton("Validate BVO")
+        validate_button.setStyleSheet("color: #fcfcfc;")
+        validate_button.clicked.connect(self.validate_bvo)
+        content_layout.addWidget(validate_button)
+
+        # Add collapsible terminal
+        self.terminal = QTextEdit()
+        self.terminal.setPlaceholderText("Terminal")
+        self.terminal.setStyleSheet("background-color: #323234; color: #FFFFFF; padding: 10px;")
+        self.terminal.setVisible(False)  # Hide terminal initially
+        self.terminal.setVerticalScrollBar(QScrollBar())
+        self.terminal.verticalScrollBar().setStyleSheet("background-color: #2e2e2e;")
+
+        # Stylish buttons
+        self.terminal_toggle_button_up = QPushButton("▲")
+        self.terminal_toggle_button_up.setFixedWidth(30)
+        self.terminal_toggle_button_up.setStyleSheet("""
+            QPushButton {
+                color: #fcfcfc;
+                background-color: #323234;
+                border: none;
+                border-radius: 15px;
+            }
+            QPushButton:hover {
+                background-color: #3a3a3a;
+            }
+        """)
+        self.terminal_toggle_button_up.clicked.connect(self.hide_terminal)
+
+        self.terminal_toggle_button_down = QPushButton("▼")
+        self.terminal_toggle_button_down.setFixedWidth(30)
+        self.terminal_toggle_button_down.setStyleSheet("""
+            QPushButton {
+                color: #fcfcfc;
+                background-color: #323234;
+                border: none;
+                border-radius: 15px;
+            }
+            QPushButton:hover {
+                background-color: #3a3a3a;
+            }
+        """)
+        self.terminal_toggle_button_down.clicked.connect(self.show_terminal)
+        self.terminal_toggle_button_down.setVisible(False)  # Hide initially
+
+        terminal_toggle_layout = QHBoxLayout()
+        terminal_toggle_layout.addWidget(self.terminal_toggle_button_up, alignment=Qt.AlignmentFlag.AlignLeft)
+        terminal_toggle_layout.addWidget(self.terminal_toggle_button_down, alignment=Qt.AlignmentFlag.AlignLeft)
+
+        content_layout.addLayout(terminal_toggle_layout)
+        content_layout.addWidget(self.terminal)
+
         # Right layout for mobile view
         mobile_view_layout = QVBoxLayout()
         mobile_view_widget = QWidget()
@@ -90,6 +147,41 @@ class BVOEditor(QWidget):
 
         # Call the update_mobile_view method to render the initial BVO code
         self.update_mobile_view()
+
+    def hide_terminal(self):
+        self.terminal.hide()
+        self.terminal_toggle_button_up.setVisible(False)
+        self.terminal_toggle_button_down.setVisible(True)
+
+    def show_terminal(self):
+        self.terminal.show()
+        self.terminal.setFixedHeight(self.bvo_editor.height() // 3)  # Set the height of the terminal to one-third of the bvo_editor
+        self.terminal_toggle_button_up.setVisible(True)
+        self.terminal_toggle_button_down.setVisible(False)
+
+    def validate_bvo(self):
+        try:
+            bvo_code = self.bvo_editor.toPlainText()
+            rules_file_path = os.path.join(os.path.dirname(__file__), '..', 'Rule_Engine','BVO_Rule_Engine', 'rules.json')
+            rules_file_path = os.path.abspath(rules_file_path)  # Get absolute path
+            print(f"Using rules file path: {rules_file_path}")  # Debugging information
+
+            if not os.path.exists(rules_file_path):
+                raise FileNotFoundError(f"rules.json not found at {rules_file_path}")
+
+            rule_engine = RuleEngine()
+            rule_engine.load_rules_from_json(rules_file_path)
+            bvo = BusinessValueObject(json.loads(bvo_code))
+            errors = rule_engine.apply_rules(bvo)
+            if errors:
+                self.terminal.setPlainText("\n".join(errors))
+                self.show_terminal()
+            else:
+                self.terminal.setPlainText("No errors found!")
+                self.hide_terminal()
+        except Exception as e:
+            self.terminal.setPlainText(f"An error occurred during validation: {str(e)}")
+            self.show_terminal()
 
     def update_mobile_view(self):
         bvo_code = self.bvo_editor.toPlainText()

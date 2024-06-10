@@ -35,7 +35,7 @@ class MainWindow(QMainWindow):
 
 
         # List of icon file names (replace with your actual icon file names)
-        icon_file_names = ["home.png", "save.png", "code_1.png", "img.png", "img_2.png"]
+        icon_file_names = ["home.png", "save.png", "code_1.png"]
 
         icon_paths = [os.path.join(cwd, "Theme", "icons", icon_file_name) for icon_file_name in icon_file_names]
 

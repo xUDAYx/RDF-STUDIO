@@ -2,7 +2,7 @@ import os
 import re
 import logging
 from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLineEdit, QFileDialog, QTableWidget,
-                             QTableWidgetItem, QPushButton, QFrame, QHeaderView)
+                             QTableWidgetItem, QPushButton, QFrame, QHeaderView, QLabel)
 from PyQt6.QtCore import Qt, pyqtSignal
 
 def list_folders_and_files(root_dir):
@@ -92,6 +92,11 @@ class ProjectView(QWidget):
         self.refresh_button.setStyleSheet("background-color: #323234;border-radius: 5px; padding: 5px; color: #fcfcfc;")
         file_layout.addWidget(self.refresh_button)
 
+        self.merge_button = QPushButton('Merge')
+        self.merge_button.clicked.connect(self.merge_files)
+        self.merge_button.setStyleSheet("background-color: #323234;border-radius: 5px; padding: 5px; color: #fcfcfc;")
+        file_layout.addWidget(self.merge_button)
+
         main_layout.addWidget(file_frame)
 
         self.table_widget = QTableWidget()
@@ -103,6 +108,10 @@ class ProjectView(QWidget):
         """)
         self.table_widget.cellDoubleClicked.connect(self.cell_double_clicked)
         main_layout.addWidget(self.table_widget)
+
+        unlinked_files_label = QLabel("Unlinked Files")
+        unlinked_files_label.setStyleSheet("background-color: #232228;color: #f3f3f3; padding: 5px; border-radius: 10px; text-align: center; item-align: center; qproperty-alignment: AlignCenter; font-weight: bold;")
+        main_layout.addWidget(unlinked_files_label)
 
         self.unlinked_table_widget = QTableWidget()
         self.unlinked_table_widget.setStyleSheet("""
@@ -128,27 +137,30 @@ class ProjectView(QWidget):
             self.file_entry.setText(dir_path)
             self.populate_table_from_bw_file(file_groups)
 
-            # Get a list of all file paths in the directory
-            all_file_paths = []
+            # Collect all file paths in the directory
+            all_file_paths = set()
             for folder_name, files in folder_contents.items():
                 for file_name in files:
                     file_path = os.path.join(self.folder_path, folder_name, file_name)
-                    all_file_paths.append(file_path)
+                    all_file_paths.add(file_path)
 
-            # Get a set of displayed file paths from the main table
+            # Collect file paths from the main table
             displayed_file_paths = set()
-            for row_data in table_data[1:]:
-                for file_path in row_data:
-                    if file_path:
-                        displayed_file_paths.add(os.path.join(self.folder_path, *file_path.split('/')))
+            for row in range(1, self.table_widget.rowCount()):  # Start from row 1 to skip the header
+                for col in range(self.table_widget.columnCount()):
+                    item = self.table_widget.item(row, col)
+                    if item:
+                        file_name = item.text()
+                        if file_name:
+                            folder_name = self.table_widget.horizontalHeaderItem(col).text()
+                            file_path = os.path.join(self.folder_path, folder_name, file_name)
+                            displayed_file_paths.add(file_path)
 
-            # Remove displayed file paths from the list of all file paths
-            undisplayed_file_paths = [file_path for file_path in all_file_paths if file_path not in displayed_file_paths]
-
+            # Find undisplayed file paths
+            undisplayed_file_paths = list(all_file_paths - displayed_file_paths)
             self.display_unlinked_files(undisplayed_file_paths)
         else:
             self.file_entry.setText("Selected Directory")
-
 
     def display_table(self, data):
         if not data:
@@ -169,14 +181,26 @@ class ProjectView(QWidget):
 
     def display_unlinked_files(self, undisplayed_file_paths):
         self.unlinked_table_widget.clear()
-        self.unlinked_table_widget.setColumnCount(1)
-        self.unlinked_table_widget.setHorizontalHeaderLabels(["Undisplayed Files"])
-        self.unlinked_table_widget.setRowCount(len(undisplayed_file_paths))
 
-        for row_idx, file_path in enumerate(undisplayed_file_paths):
-            item = QTableWidgetItem(file_path)
-            item.setFlags(item.flags() ^ Qt.ItemFlag.ItemIsEditable)
-            self.unlinked_table_widget.setItem(row_idx, 0, item)
+        # Extract folder names from undisplayed file paths
+        folders = sorted(set(os.path.basename(os.path.dirname(path)) for path in undisplayed_file_paths))
+        self.unlinked_table_widget.setColumnCount(len(folders))
+        self.unlinked_table_widget.setHorizontalHeaderLabels(folders)
+
+        files_by_folder = {folder: [] for folder in folders}
+        for file_path in undisplayed_file_paths:
+            folder_name = os.path.basename(os.path.dirname(file_path))
+            files_by_folder[folder_name].append(file_path)
+
+        # Find the maximum number of files in any folder to determine the row count
+        max_files_count = max(len(files) for files in files_by_folder.values())
+        self.unlinked_table_widget.setRowCount(max_files_count)
+
+        for col_idx, folder_name in enumerate(folders):
+            for row_idx, file_path in enumerate(files_by_folder[folder_name]):
+                item = QTableWidgetItem(os.path.basename(file_path))
+                item.setFlags(item.flags() ^ Qt.ItemFlag.ItemIsEditable)
+                self.unlinked_table_widget.setItem(row_idx, col_idx, item)
 
         self.unlinked_table_widget.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
 
@@ -189,66 +213,64 @@ class ProjectView(QWidget):
         if self.folder_path:
             self.load_directory(self.folder_path)
         else:
-            self.file_entry.setText("Selected Directory")
+            self.file_entry.setText("Please select a directory first")
 
     def cell_double_clicked(self, row, column):
         if row == 0:
-            # Handle the first row (main file information)
-            folder_name = self.table_widget.horizontalHeaderItem(column).text()
+            folder_name_item = self.table_widget.horizontalHeaderItem(column)
             file_name_item = self.table_widget.item(row, column)
-            if file_name_item:
+            if folder_name_item and file_name_item:
+                folder_name = folder_name_item.text()
                 file_name = file_name_item.text()
                 if file_name:
                     file_path = os.path.join(self.folder_path, folder_name, file_name)
-                    print(f"Opening file: {file_path}")
                     if os.path.exists(file_path):
                         self.file_double_clicked.emit(file_path)
-                    else:
-                        print(f"File not found: {file_path}")
         else:
-            # Handle rows after the first row
-            if column == 0:  # RDF_UI column
-                ui_filename = self.table_widget.item(row, column).text()
-                ui_file_path = os.path.join(self.folder_path, 'RDF_UI', ui_filename)
-                print(f"Opening file: {ui_file_path}")
-                if os.path.exists(ui_file_path):
-                    self.file_double_clicked.emit(ui_file_path)
-                else:
-                    print(f"File not found: {ui_file_path}")
-            elif column == 1:  # RDF_ACTION column
-                js_filename = self.table_widget.item(row, column).text()
-                js_file_path = os.path.join(self.folder_path, 'RDF_ACTION', js_filename)
-                print(f"Opening file: {js_file_path}")
-                if os.path.exists(js_file_path):
-                    self.file_double_clicked.emit(js_file_path)
-                else:
-                    print(f"File not found: {js_file_path}")
-            elif column == 2:  # RDF_BW column
-                bw_filename = self.table_widget.item(row, column).text()
-                bw_file_path = os.path.join(self.folder_path, 'RDF_BW', bw_filename)
-                print(f"Opening file: {bw_file_path}")
-                if os.path.exists(bw_file_path):
-                    self.file_double_clicked.emit(bw_file_path)
-                else:
-                    print(f"File not found: {bw_file_path}")
-            elif column == 3:  # RDF_BVO column
-                bvo_filename = self.table_widget.item(row, column).text()
-                bvo_file_path = os.path.join(self.folder_path, 'RDF_BVO', bvo_filename)
-                print(f"Opening file: {bvo_file_path}")
-                if os.path.exists(bvo_file_path):
-                    self.file_double_clicked.emit(bvo_file_path)
-                else:
-                    print(f"File not found: {bvo_file_path}")
-            elif column == 4:  # RDF_DATA column
-                json_filename = self.table_widget.item(row, column).text()
-                json_file_path = os.path.join(self.folder_path, 'RDF_DATA', json_filename)
-                print(f"Opening file: {json_file_path}")
-                if os.path.exists(json_file_path):
-                    self.file_double_clicked.emit(json_file_path)
-                else:
-                    print(f"File not found: {json_file_path}")
+            column_map = {0: 'RDF_UI', 1: 'RDF_ACTION', 2: 'RDF_BW', 3: 'RDF_BVO', 4: 'RDF_DATA'}
+            folder_name = column_map.get(column)
+            if folder_name:
+                file_name = self.table_widget.item(row, column).text()
+                if file_name:
+                    file_path = os.path.join(self.folder_path, folder_name, file_name)
+                    if os.path.exists(file_path):
+                        self.file_double_clicked.emit(file_path)
+
     def handle_file_double_clicked(self, file_path):
         print(f"File double-clicked: {file_path}")
+
+    def merge_files(self):
+        file_dialog = QFileDialog(self)
+        file_dialog.setFileMode(QFileDialog.FileMode.ExistingFiles)
+        file_dialog.setNameFilter("Files (*.php *.js *.json)")
+        if file_dialog.exec():
+            selected_files = file_dialog.selectedFiles()
+            self.add_to_unlinked_table(selected_files)
+
+    def add_to_unlinked_table(self, file_paths):
+        existing_columns = [self.unlinked_table_widget.horizontalHeaderItem(i).text() for i in range(self.unlinked_table_widget.columnCount())]
+        new_file_dict = {}
+        for file_path in file_paths:
+            folder_name = os.path.basename(os.path.dirname(file_path))
+            file_name = os.path.basename(file_path)
+            if folder_name not in new_file_dict:
+                new_file_dict[folder_name] = []
+            new_file_dict[folder_name].append(file_name)
+
+        for folder_name, files in new_file_dict.items():
+            if folder_name not in existing_columns:
+                self.unlinked_table_widget.insertColumn(len(existing_columns))
+                self.unlinked_table_widget.setHorizontalHeaderItem(len(existing_columns), QTableWidgetItem(folder_name))
+                existing_columns.append(folder_name)
+            col_idx = existing_columns.index(folder_name)
+            for file_name in files:
+                row_idx = self.unlinked_table_widget.rowCount()
+                self.unlinked_table_widget.insertRow(row_idx)
+                item = QTableWidgetItem(file_name)
+                item.setFlags(item.flags() ^ Qt.ItemFlag.ItemIsEditable)
+                self.unlinked_table_widget.setItem(row_idx, col_idx, item)
+
+        self.unlinked_table_widget.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
 
     def populate_table_from_bw_file(self, file_groups):
         logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -303,7 +325,6 @@ class ProjectView(QWidget):
         except Exception as e:
             logging.error(f"An error occurred: {e}")
 
-
 # If this script is run directly, create a QApplication and show the ProjectView window
 if __name__ == '__main__':
     from PyQt6.QtWidgets import QApplication
@@ -311,3 +332,5 @@ if __name__ == '__main__':
 
     app = QApplication(sys.argv)
     window = ProjectView()
+    window.show()
+    sys.exit(app.exec())

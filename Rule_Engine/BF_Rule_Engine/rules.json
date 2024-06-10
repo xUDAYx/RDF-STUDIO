@@ -1,0 +1,33 @@
+{
+    "rules": [
+      {
+        "name": "resultStatusRule",
+        "condition": "result < 100",
+        "actions": [
+          "print('Status: low')"
+        ]
+      },
+      {
+        "name": "resultStatusRuleElse",
+        "condition": "result >= 100",
+        "actions": [
+          "print('Status: high')"
+        ]
+      },
+      {
+        "name": "argsRule",
+        "condition": "args[0] == 'A'",
+        "actions": [
+          "print('Category A detected')"
+        ]
+      },
+      {
+        "name": "argsRuleElse",
+        "condition": "args[0] != 'A'",
+        "actions": [
+          "print('Non-category A detected')"
+        ]
+      }
+    ]
+  }
+  
