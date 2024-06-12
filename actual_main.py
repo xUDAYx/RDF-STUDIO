@@ -9,8 +9,18 @@ from JSON_Editor.json_editor import JsonEditor
 from BVO_Editor.bvo_editor import BVOEditor
 from Theme.colors import Colors
 from PyQt6.QtGui import QIcon
+import sys
+import traceback
+import logging
 cwd = os.getcwd()
 
+logging.basicConfig(filename='error.log', level=logging.ERROR)
+
+def excepthook(exc_type, exc_value, exc_traceback):
+    logging.error("Uncaught exception", exc_info=(exc_type, exc_value, exc_traceback))
+
+# Install the custom exception handler
+sys.excepthook = excepthook
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()

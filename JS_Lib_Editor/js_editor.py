@@ -1,11 +1,15 @@
-from PyQt6.QtWidgets import QWidget, QVBoxLayout, QTextEdit, QHBoxLayout, QPushButton,QScrollBar, QLineEdit
-from PyQt6.QtCore import Qt, QRegularExpression
+from PyQt6.QtWidgets import QWidget, QVBoxLayout, QTextEdit, QHBoxLayout, QLineEdit, QMessageBox,QPushButton,QScrollBar
+from PyQt6.QtCore import Qt, QRegularExpression, QUrl
 from PyQt6.QtWebEngineWidgets import QWebEngineView
 from PyQt6.QtGui import QSyntaxHighlighter, QTextCharFormat, QColor, QFont
+
+# Import PhpEditor class
+from UI_Code_Editor.php_editor import PhpEditor 
+
 import os
 import sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'Rule_Engine')))
-from Rule_Engine.JS_Rule_Engine.js_rule_engine import JsRuleEngine
+from Rule_Engine.JS_Rule_Engine.js_rule_engine import JsRuleEngine # Update this path according to your project structure
 
 class PhpHighlighter(QSyntaxHighlighter):
     def __init__(self, parent=None):
@@ -124,6 +128,9 @@ class JsEditor(QWidget):
         content_layout.addLayout(terminal_toggle_layout)
         content_layout.addWidget(self.terminal)
 
+        # Add syntax highlighter
+        self.highlighter = PhpHighlighter(self.js_editor.document())
+
         # Right layout for mobile view
         mobile_view_layout = QVBoxLayout()
         mobile_view_widget = QWidget()
@@ -133,9 +140,39 @@ class JsEditor(QWidget):
         mobile_view_layout.setContentsMargins(0, 25, 0, 25)
         mobile_view_widget.setStyleSheet("background-color: #232228; border-radius: 10px; padding:20px;border-width: 10px; ")
 
+        # URL input for browser view
+        url_layout = QHBoxLayout()
+
+        self.url_input = QLineEdit()
+        self.url_input.setPlaceholderText("Enter URL")
+        self.url_input.setFixedHeight(40)
+        self.url_input.setStyleSheet("background-color:white;border-radius: 10px;border:2px solid black; padding: 5px;")
+        url_layout.addWidget(self.url_input)
+
+        load_button = QPushButton("Load")
+        load_button.setFixedHeight(40)
+        load_button.setStyleSheet("""
+            QPushButton {
+                background-color: #4CAF50; 
+                color: white; 
+                border: none; 
+                border-radius: 10px;
+                padding: 5px;
+            }
+            QPushButton:pressed {
+                background-color: #45a049;
+            }
+        """)
+        load_button.clicked.connect(self.load_url)
+        url_layout.addWidget(load_button)
+
+        mobile_view_layout.addLayout(url_layout)
+
         self.mobile_view = QWebEngineView()
-        self.mobile_view.setStyleSheet("background-color: #FFFFFF; border-radius: 20px; padding:20px;")
-        mobile_view_layout.addWidget(self.mobile_view)  # Adjusted size
+        self.mobile_view.setStyleSheet("background-color: #FFFFFF; border-radius: 20px;")
+        self.mobile_view.setFixedSize(360, 540)  # Adjusted size to fit with URL input
+
+        mobile_view_layout.addWidget(self.mobile_view, 0, Qt.AlignmentFlag.AlignCenter)
 
         # Combine content area and mobile view
         main_content_layout = QHBoxLayout()
@@ -144,11 +181,59 @@ class JsEditor(QWidget):
 
         self.setLayout(main_content_layout)
 
+        # Create an instance of PhpEditor
+        self.php_editor = PhpEditor()
+        self.php_editor.php_editor.textChanged.connect(self.update_mobile_view)
+
+    def set_code(self, code):
+        self.js_editor.setPlainText(code)
+
+    def update_mobile_view(self):
+        html_code = self.php_editor.php_editor.toPlainText()
+        try:
+            css_code = """
+            <style>
+                body {
+                    font-family: Arial, sans-serif;
+                    background-color: #f0f0f0;
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    height: 100vh;
+                    margin: 0;
+                    overflow: hidden;
+                }
+                .container {
+                    width: 100%;
+                    height: 100%;
+                    overflow: auto;
+                    display: flex;
+                    flex-direction: column;
+                    justify-content: flex-start;
+                    align-items: center;
+                    box-sizing: border-box;
+                    padding: 20px;
+                }
+            </style>
+            """
+            self.mobile_view.setHtml(css_code + '<div class="container">' + html_code + '</div>')
+        except Exception as e:
+            self.show_error_message(f"Error updating mobile view: {e}")
+
+    def load_url(self):
+        try:
+            url = self.url_input.text()
+            if not url.startswith("http://") and not url.startswith("https://"):
+                url = "http://" + url
+            self.mobile_view.setUrl(QUrl(url))
+        except Exception as e:
+            self.show_error_message(f"Failed to load URL: {e}")
+
     def hide_terminal(self):
         self.terminal.hide()
         self.terminal_toggle_button_up.setVisible(False)
-        self.terminal_toggle_button_down.setVisible(True)
-
+        self.terminal_toggle_button_down.setVisible(True)    
+        
     def show_terminal(self):
         self.terminal.show()
         self.terminal.setFixedHeight(self.js_editor.height() // 3)  # Set the height of the terminal to one-third of the js_editor
@@ -177,12 +262,7 @@ class JsEditor(QWidget):
             self.terminal.setPlainText(f"An error occurred during validation: {str(e)}")
             self.show_terminal()
 
-    def set_code(self, code):
-        self.js_editor.setPlainText(code)
+    def show_error_message(self, message):
+        QMessageBox.critical(self, "Error", message)
 
 
-    def run_js(self):
-        js_code = self.js_editor.toPlainText()
-        # Here, you would execute the JS code (e.g., send it to a server for execution)
-        # For simplicity, let's assume we just want to display the JS code
-        self.web_view.setHtml("<pre>" + js_code + "</pre>")

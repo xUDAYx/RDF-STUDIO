@@ -1,0 +1,98 @@
+ERROR:root:Uncaught exception
+Traceback (most recent call last):
+  File "d:\RDF studio - git\RDF-STUDIO\actual_main.py", line 105, in <lambda>
+    button.clicked.connect(lambda checked, b=item: self.sidebar_button_clicked(b))
+                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "d:\RDF studio - git\RDF-STUDIO\actual_main.py", line 160, in sidebar_button_clicked
+    self.load_js_lib_editor()
+  File "d:\RDF studio - git\RDF-STUDIO\actual_main.py", line 214, in load_js_lib_editor
+    self.js_editor_instance = JsEditor()
+                              ^^^^^^^^^^
+  File "d:\RDF studio - git\RDF-STUDIO\JS_Lib_Editor\js_editor.py", line 81, in __init__
+    validate_button.clicked.connect(self.validate_js)
+                                    ^^^^^^^^^^^^^^^^
+AttributeError: 'JsEditor' object has no attribute 'validate_js'
+ERROR:root:Uncaught exception
+Traceback (most recent call last):
+  File "d:\RDF studio - git\RDF-STUDIO\actual_main.py", line 105, in <lambda>
+    button.clicked.connect(lambda checked, b=item: self.sidebar_button_clicked(b))
+                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "d:\RDF studio - git\RDF-STUDIO\actual_main.py", line 160, in sidebar_button_clicked
+    self.load_js_lib_editor()
+  File "d:\RDF studio - git\RDF-STUDIO\actual_main.py", line 214, in load_js_lib_editor
+    self.js_editor_instance = JsEditor()
+                              ^^^^^^^^^^
+  File "d:\RDF studio - git\RDF-STUDIO\JS_Lib_Editor\js_editor.py", line 81, in __init__
+    validate_button.clicked.connect(self.validate_js)
+                                    ^^^^^^^^^^^^^^^^
+AttributeError: 'JsEditor' object has no attribute 'validate_js'
+ERROR:root:Uncaught exception
+Traceback (most recent call last):
+  File "d:\RDF studio - git\RDF-STUDIO\actual_main.py", line 105, in <lambda>
+    button.clicked.connect(lambda checked, b=item: self.sidebar_button_clicked(b))
+                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "d:\RDF studio - git\RDF-STUDIO\actual_main.py", line 160, in sidebar_button_clicked
+    self.load_js_lib_editor()
+  File "d:\RDF studio - git\RDF-STUDIO\actual_main.py", line 214, in load_js_lib_editor
+    self.js_editor_instance = JsEditor()
+                              ^^^^^^^^^^
+  File "d:\RDF studio - git\RDF-STUDIO\JS_Lib_Editor\js_editor.py", line 81, in __init__
+    validate_button.clicked.connect(self.validate_js)
+                                    ^^^^^^^^^^^^^^^^
+AttributeError: 'JsEditor' object has no attribute 'validate_js'
+ERROR:root:Uncaught exception
+Traceback (most recent call last):
+  File "d:\RDF studio - git\RDF-STUDIO\actual_main.py", line 105, in <lambda>
+    button.clicked.connect(lambda checked, b=item: self.sidebar_button_clicked(b))
+                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "d:\RDF studio - git\RDF-STUDIO\actual_main.py", line 160, in sidebar_button_clicked
+    self.load_js_lib_editor()
+  File "d:\RDF studio - git\RDF-STUDIO\actual_main.py", line 214, in load_js_lib_editor
+    self.js_editor_instance = JsEditor()
+                              ^^^^^^^^^^
+  File "d:\RDF studio - git\RDF-STUDIO\JS_Lib_Editor\js_editor.py", line 81, in __init__
+    validate_button.clicked.connect(self.validate_js)
+                                    ^^^^^^^^^^^^^^^^
+AttributeError: 'JsEditor' object has no attribute 'validate_js'
+ERROR:root:Uncaught exception
+Traceback (most recent call last):
+  File "d:\RDF studio - git\RDF-STUDIO\actual_main.py", line 105, in <lambda>
+    button.clicked.connect(lambda checked, b=item: self.sidebar_button_clicked(b))
+                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "d:\RDF studio - git\RDF-STUDIO\actual_main.py", line 160, in sidebar_button_clicked
+    self.load_js_lib_editor()
+  File "d:\RDF studio - git\RDF-STUDIO\actual_main.py", line 214, in load_js_lib_editor
+    self.js_editor_instance = JsEditor()
+                              ^^^^^^^^^^
+  File "d:\RDF studio - git\RDF-STUDIO\JS_Lib_Editor\js_editor.py", line 81, in __init__
+    validate_button.clicked.connect(self.validate_js)
+                                    ^^^^^^^^^^^^^^^^
+AttributeError: 'JsEditor' object has no attribute 'validate_js'
+ERROR:root:Uncaught exception
+Traceback (most recent call last):
+  File "d:\RDF studio - git\RDF-STUDIO\actual_main.py", line 105, in <lambda>
+    button.clicked.connect(lambda checked, b=item: self.sidebar_button_clicked(b))
+                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "d:\RDF studio - git\RDF-STUDIO\actual_main.py", line 160, in sidebar_button_clicked
+    self.load_js_lib_editor()
+  File "d:\RDF studio - git\RDF-STUDIO\actual_main.py", line 214, in load_js_lib_editor
+    self.js_editor_instance = JsEditor()
+                              ^^^^^^^^^^
+  File "d:\RDF studio - git\RDF-STUDIO\JS_Lib_Editor\js_editor.py", line 106, in __init__
+    self.terminal_toggle_button_up.clicked.connect(self.hide_terminal)
+                                                   ^^^^^^^^^^^^^^^^^^
+AttributeError: 'JsEditor' object has no attribute 'hide_terminal'. Did you mean: 'show_terminal'?
+ERROR:root:Uncaught exception
+Traceback (most recent call last):
+  File "d:\RDF studio - git\RDF-STUDIO\actual_main.py", line 105, in <lambda>
+    button.clicked.connect(lambda checked, b=item: self.sidebar_button_clicked(b))
+                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "d:\RDF studio - git\RDF-STUDIO\actual_main.py", line 160, in sidebar_button_clicked
+    self.load_js_lib_editor()
+  File "d:\RDF studio - git\RDF-STUDIO\actual_main.py", line 214, in load_js_lib_editor
+    self.js_editor_instance = JsEditor()
+                              ^^^^^^^^^^
+  File "d:\RDF studio - git\RDF-STUDIO\JS_Lib_Editor\js_editor.py", line 106, in __init__
+    self.terminal_toggle_button_up.clicked.connect(self.hide_terminal)
+                                                   ^^^^^^^^^^^^^^^^^^
+AttributeError: 'JsEditor' object has no attribute 'hide_terminal'. Did you mean: 'show_terminal'?
